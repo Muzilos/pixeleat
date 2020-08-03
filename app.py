@@ -5,10 +5,11 @@ from random import randint
 pygame.init()
 RADIUS = 50
 DIAMETER = 2 * RADIUS
-WIDTH, HEIGHT = 500, 500
+WIDTH, HEIGHT = 500, 250
 WHITE = (255,255,255)
 BLUE = (20, 20, 200)
 DELAY = 10
+
 
 class Pixel:
     def __init__(self, x, y, radius, color, facing):
@@ -16,8 +17,27 @@ class Pixel:
         self.radius = radius
         self.color = color
         self.facing = facing
+        self.displacement = RADIUS // 4
+
     def draw(self, win):
-        pygame.draw.circle(win, self.color, self.coord, self.radius)
+        pygame.draw.circle(win, self.color.color, self.coord, self.radius)
+
+    def move_forwards(self, x_max=WIDTH, y_max=HEIGHT):
+        x, y = self.coord
+        if x < x_max:
+            x, y = x + self.displacement, y
+        else:
+            x, y = 0, y + self.displacement
+        self.coord = (x, y)
+
+    def move_backwards(self, x_max=WIDTH, y_max=HEIGHT):
+        x, y = self.coord
+        if x > 0:
+            x, y = x - self.displacement, y
+        else:
+            x, y = WIDTH, y - self.displacement
+        self.coord = (x, y)
+
 
 class Color:
     def __init__(self, r=0, g=0, b=0, rgb=()):
@@ -30,6 +50,7 @@ class Color:
             else:
                 raise Exception('RGB should have at least 3 values to unpack')
         self.color = [self.r, self.g, self.b]
+
     def randomize(self):
         for i in range(len(self.color)):
             primary_color = self.color[i]
@@ -41,61 +62,60 @@ class Color:
             except ZeroDivisionError:
                 primary_color = randint((primary_color + 10), 255) - primary_color
             self.color[i] = primary_color
-        print(self.color)
+        # print(self.color)
 
 class App:
     def __init__(self):
         pygame.display.set_caption("PixelEater")
         self.window = pygame.display.set_mode(size=(WIDTH, HEIGHT))
         self.running = True
-        self.pixels = []
-    def run(self):
+        self.top_pixels, self.bot_pixels = [], []
+
         # Top pixel
-        top_x, top_y = 0, RADIUS
-        top_color = Color(rgb=WHITE)
-        top_facing = 'RIGHT'
+        self.top_color = Color(rgb=WHITE)
+        self.top_pixel = Pixel(0, RADIUS, RADIUS, self.top_color, facing='RIGHT')
         # Bottom pixel
-        bot_x, bot_y = WIDTH, HEIGHT - RADIUS
-        bot_color = Color(rgb=BLUE)
-        bot_facing = 'LEFT'
+        self.bot_color = Color(rgb=BLUE)
+        self.bot_pixel = Pixel(WIDTH, HEIGHT - RADIUS, RADIUS, self.bot_color, facing='LEFT')
+        self.displacement = self.bot_pixel.displacement
+
+    def run(self):
         while self.running:
             pygame.time.delay(DELAY)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+            self.run_pixel(self.top_pixel)
+            self.run_pixel(self.bot_pixel)
+            print("{top}\t{bot}".format(top=(self.top_pixel.coord), \
+                bot=(self.bot_pixel.coord)))
             pygame.display.update()
-            
-            top_x, top_y, top_color, top_facing = self.run_pixel(top_x, top_y, top_color, top_facing)
-            bot_x, bot_y, bot_color, bot_facing = self.run_pixel(bot_x, bot_y, bot_color, bot_facing)
-    def run_pixel(self, x, y, color, direction):
-        pixel = Pixel(x, y, RADIUS, color.color, facing=direction)
-        pixel.draw(self.window)
-        hit, direction = self.check_hit_change_direction(x, y, WIDTH, HEIGHT - RADIUS, direction)
+
+    def run_pixel(self, pixel):
+        x, y = pixel.coord
+        hit, direction = self.check_hit_change_direction(pixel, WIDTH, HEIGHT)
         if hit:
             print('HIT {}'.format(direction))
-            color.randomize()
-        if pixel.facing == 'LEFT':
-            x , y = self.move_backwards(x, y)
+            pixel.facing = direction
+            pixel.color.randomize()
         else:
-            x , y = self.move_forwards(x, y)
+            if pixel.facing == 'LEFT':
+                pixel.move_backwards()
+            else:
+                pixel.move_forwards()
 
-        return x, y, color, direction
-    def move_forwards(self, x, y, x_max=WIDTH, y_max=HEIGHT):
-        if x < x_max:
-            x, y = x + RADIUS // 4, y
-        else:
-            x, y = 0, y + RADIUS // 4
-        return x, y
-    def move_backwards(self, x, y, x_max=WIDTH, y_max=HEIGHT):
-        if x > 0:
-            x, y = x - RADIUS // 4, y
-        else:
-            x, y = WIDTH, y - RADIUS // 4
-        return x, y
-    def check_hit_change_direction(self, x, y, hit_x, hit_y, cur_direction):
+        pixel.draw(self.window)
+        return pixel.color, direction
+
+    def check_hit_change_direction(self, pixel, hit_x, hit_y):
+        cur_direction = pixel.facing
+        x, y = pixel.coord
+        # offset = self.displacement * 2
         if (x >= hit_x) and (y >= hit_y):
+            pixel.move_backwards()
             return True, 'LEFT'
-        elif (x <= 0) and (y <= RADIUS):
+        elif (x <= 0) and (y <= 0):
+            pixel.move_forwards()
             return True, 'RIGHT'
         else:
             return False, cur_direction
