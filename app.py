@@ -1,42 +1,111 @@
 import pygame
 from time import sleep
+from random import randint
 
 pygame.init()
-RADIUS = 6
+RADIUS = 40
+DIAMETER = 2 * RADIUS
+WIDTH, HEIGHT = 500, 500
 WHITE = (255,255,255)
-WIDTH, HEIGHT = 200, 100
-pygame.display.set_caption("PixelEater")
-win = pygame.display.set_mode(size=(WIDTH, HEIGHT))
+BLUE = (20, 20, 200)
+DELAY = 2
 
 class Pixel:
-    def __init__(self, x, y, radius, color):
+    def __init__(self, x, y, radius, color, facing):
         self.coord = (x, y)
         self.radius = radius
         self.color = color
+        self.facing = facing
 
     def draw(self, win):
         pygame.draw.circle(win, self.color, self.coord, self.radius)
+class Color:
+    def __init__(self, r=0, g=0, b=0, rgb=()):
+        self.r = r
+        self.g = g
+        self.b = b
+        if rgb:
+            if len(rgb) >= 3:
+                self.r, self.g, self.b = rgb[0:3] 
+            else:
+                raise Exception('RGB should have at least 3 values to unpack')
+        self.color = (self.r, self.g, self.b)
+        
+    def randomize(self):
+        try:
+            if self.r + self.g + self.b >= 50:
+                self.r = self.r % randint(1, 255) 
+                self.g = self.g % randint(1, 255) 
+                self.b = self.b % randint(1, 255) 
+            else: 
+                self.r = randint((self.r) * 2, 255) - self.r
+                self.g = randint((self.g) * 2, 255) - self.g
+                self.b = randint((self.b) * 2, 255) - self.b
+        except ZeroDivisionError:
+            self.r = randint((self.r + 10), 255) - self.r
+            self.g = randint((self.g + 10), 255) - self.g
+            self.b = randint((self.b + 10), 255) - self.b
 
-def update_coords(x, y, x_max=WIDTH, y_max=HEIGHT):
-    if x < x_max:
-        x, y = x + 1, y
-    else:
-        x, y = 0, y + RADIUS * 2
-    return x, y
-    
+        self.color = (self.r, self.g, self.b)
+        print(self.color)
+class App:
+    def __init__(self):
+        pygame.display.set_caption("PixelEater")
+        self.window = pygame.display.set_mode(size=(WIDTH, HEIGHT))
+        self.running = True
+        self.pixels = []
+    def run(self):
+        # Top pixel
+        top_x, top_y = 0, RADIUS
+        top_color = Color(rgb=WHITE)
+        top_facing = 'RIGHT'
+        # Bottom pixel
+        bot_x, bot_y = WIDTH, HEIGHT - RADIUS
+        bot_color = Color(rgb=BLUE)
+        bot_facing = 'LEFT'
+        while self.running:
+            pygame.time.delay(DELAY)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            pygame.display.update()
+            
+            top_x, top_y, top_color, top_facing = self.run_pixel(top_x, top_y, top_color, top_facing)
+            bot_x, bot_y, bot_color, bot_facing = self.run_pixel(bot_x, bot_y, bot_color, bot_facing)
+    def run_pixel(self, x, y, color, direction):
+        pixel = Pixel(x, y, RADIUS, color.color, facing=direction)
+        pixel.draw(self.window)
+        hit, direction = self.check_hit_change_direction(x, y, WIDTH, HEIGHT - RADIUS, direction)
+        if hit:
+            print('HIT {}'.format(direction))
+            color.randomize()
+        if pixel.facing == 'LEFT':
+            x , y = self.move_backwards(x, y)
+        else:
+            x , y = self.move_forwards(x, y)
+
+        return x, y, color, direction
+    def move_forwards(self, x, y, x_max=WIDTH, y_max=HEIGHT):
+        if x < x_max:
+            x, y = x + RADIUS // 2, y
+        else:
+            x, y = 0, y + RADIUS // 2
+        return x, y
+    def move_backwards(self, x, y, x_max=WIDTH, y_max=HEIGHT):
+        if x > 0:
+            x, y = x - RADIUS // 2, y
+        else:
+            x, y = WIDTH, y - RADIUS // 2
+        return x, y
+    def check_hit_change_direction(self, x, y, hit_x, hit_y, cur_direction):
+        if (x >= hit_x) and (y >= hit_y):
+            return True, 'LEFT'
+        elif (x <= 0) and (y <= RADIUS):
+            return True, 'RIGHT'
+        else:
+            return False, cur_direction
+
 if __name__ == "__main__":
-    running = True
-    pixels = []
-    x, y = 0, RADIUS
-    while running:
-        pygame.time.delay(10)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        pygame.display.update()
-        x , y = update_coords(x, y)
-        pixel = Pixel(x, y, RADIUS, WHITE)
-        pixel.draw(win)
-
-    
+    app = App()
+    app.run()
     pygame.display.quit()
