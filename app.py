@@ -5,7 +5,7 @@ from random import randint
 pygame.init()
 RADIUS = 50
 DIAMETER = 2 * RADIUS
-WIDTH, HEIGHT = 500, 250
+WIDTH, HEIGHT = 500, 500
 WHITE = (255,255,255)
 BLUE = (20, 20, 200)
 DELAY = 10
@@ -77,7 +77,6 @@ class App:
         # Bottom pixel
         self.bot_color = Color(rgb=BLUE)
         self.bot_pixel = Pixel(WIDTH, HEIGHT - RADIUS, RADIUS, self.bot_color, facing='LEFT')
-        self.displacement = self.bot_pixel.displacement
 
     def run(self):
         while self.running:
@@ -87,15 +86,14 @@ class App:
                     self.running = False
             self.run_pixel(self.top_pixel)
             self.run_pixel(self.bot_pixel)
-            print("{top}\t{bot}".format(top=(self.top_pixel.coord), \
-                bot=(self.bot_pixel.coord)))
+            # print("{top}\t{bot}".format(top=(self.top_pixel.coord), \
+            #     bot=(self.bot_pixel.coord)))
             pygame.display.update()
 
     def run_pixel(self, pixel):
         x, y = pixel.coord
-        hit, direction = self.check_hit_change_direction(pixel, WIDTH, HEIGHT)
+        hit, direction = self.check_hit_change_direction(pixel, WIDTH, HEIGHT - RADIUS)
         if hit:
-            print('HIT {}'.format(direction))
             pixel.facing = direction
             pixel.color.randomize()
         else:
@@ -110,11 +108,10 @@ class App:
     def check_hit_change_direction(self, pixel, hit_x, hit_y):
         cur_direction = pixel.facing
         x, y = pixel.coord
-        # offset = self.displacement * 2
         if (x >= hit_x) and (y >= hit_y):
             pixel.move_backwards()
             return True, 'LEFT'
-        elif (x <= 0) and (y <= 0):
+        elif (x <= 0) and (y <= RADIUS):
             pixel.move_forwards()
             return True, 'RIGHT'
         else:
