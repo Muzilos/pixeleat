@@ -3,12 +3,12 @@ from time import sleep
 from random import randint
 
 pygame.init()
-RADIUS = 40
+RADIUS = 50
 DIAMETER = 2 * RADIUS
 WIDTH, HEIGHT = 500, 500
 WHITE = (255,255,255)
 BLUE = (20, 20, 200)
-DELAY = 2
+DELAY = 10
 
 class Pixel:
     def __init__(self, x, y, radius, color, facing):
@@ -18,7 +18,7 @@ class Pixel:
         self.facing = facing
     def draw(self, win):
         pygame.draw.circle(win, self.color, self.coord, self.radius)
-        
+
 class Color:
     def __init__(self, r=0, g=0, b=0, rgb=()):
         self.r = r
@@ -82,15 +82,15 @@ class App:
         return x, y, color, direction
     def move_forwards(self, x, y, x_max=WIDTH, y_max=HEIGHT):
         if x < x_max:
-            x, y = x + RADIUS // 2, y
+            x, y = x + RADIUS // 4, y
         else:
-            x, y = 0, y + RADIUS // 2
+            x, y = 0, y + RADIUS // 4
         return x, y
     def move_backwards(self, x, y, x_max=WIDTH, y_max=HEIGHT):
         if x > 0:
-            x, y = x - RADIUS // 2, y
+            x, y = x - RADIUS // 4, y
         else:
-            x, y = WIDTH, y - RADIUS // 2
+            x, y = WIDTH, y - RADIUS // 4
         return x, y
     def check_hit_change_direction(self, x, y, hit_x, hit_y, cur_direction):
         if (x >= hit_x) and (y >= hit_y):
