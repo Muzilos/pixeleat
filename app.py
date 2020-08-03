@@ -16,9 +16,9 @@ class Pixel:
         self.radius = radius
         self.color = color
         self.facing = facing
-
     def draw(self, win):
         pygame.draw.circle(win, self.color, self.coord, self.radius)
+        
 class Color:
     def __init__(self, r=0, g=0, b=0, rgb=()):
         self.r = r
@@ -29,25 +29,20 @@ class Color:
                 self.r, self.g, self.b = rgb[0:3] 
             else:
                 raise Exception('RGB should have at least 3 values to unpack')
-        self.color = (self.r, self.g, self.b)
-        
+        self.color = [self.r, self.g, self.b]
     def randomize(self):
-        try:
-            if self.r + self.g + self.b >= 50:
-                self.r = self.r % randint(1, 255) 
-                self.g = self.g % randint(1, 255) 
-                self.b = self.b % randint(1, 255) 
-            else: 
-                self.r = randint((self.r) * 2, 255) - self.r
-                self.g = randint((self.g) * 2, 255) - self.g
-                self.b = randint((self.b) * 2, 255) - self.b
-        except ZeroDivisionError:
-            self.r = randint((self.r + 10), 255) - self.r
-            self.g = randint((self.g + 10), 255) - self.g
-            self.b = randint((self.b + 10), 255) - self.b
-
-        self.color = (self.r, self.g, self.b)
+        for i in range(len(self.color)):
+            primary_color = self.color[i]
+            try:
+                if primary_color >= 50:
+                    primary_color = primary_color % randint(1, 255) 
+                else: 
+                    primary_color = randint((primary_color + 10) * 2, 255) - primary_color
+            except ZeroDivisionError:
+                primary_color = randint((primary_color + 10), 255) - primary_color
+            self.color[i] = primary_color
         print(self.color)
+
 class App:
     def __init__(self):
         pygame.display.set_caption("PixelEater")
