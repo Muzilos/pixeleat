@@ -3,9 +3,9 @@ from time import sleep
 from random import randint
 
 pygame.init()
-RADIUS = 50
+RADIUS = 256
 DIAMETER = 2 * RADIUS
-WIDTH, HEIGHT = 500, 500
+WIDTH, HEIGHT = 2*DIAMETER, 2*DIAMETER
 WHITE = (255,255,255)
 BLUE = (20, 20, 200)
 DELAY = 10
