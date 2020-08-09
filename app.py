@@ -1,97 +1,84 @@
 import pygame
 from time import sleep
 from random import randint
+from sound import Sound
+from pixel import Pixel, Color
+from consts import *
 
 pygame.init()
-RADIUS = 40
-DIAMETER = 2 * RADIUS
-WIDTH, HEIGHT = 400,600
-WHITE = (255,255,255)
-BLUE = (20, 20, 200)
-DELAY = 5
-
-
-class Pixel:
-    def __init__(self, x, y, radius, color, facing):
-        self.coord = (x, y)
-        self.radius = radius
-        self.color = color
-        self.facing = facing
-        self.displacement = RADIUS
-
-    def draw(self, win):
-        pygame.draw.circle(win, self.color.color, self.coord, self.radius)
-
-    def move_forwards(self, x_max=WIDTH, y_max=HEIGHT):
-        x, y = self.coord
-        if x < x_max:
-            x, y = x + self.displacement, y
-        else:
-            x, y = 0, y + self.displacement
-        self.coord = (x, y)
-
-    def move_backwards(self, x_max=WIDTH, y_max=HEIGHT):
-        x, y = self.coord
-        if x > 0:
-            x, y = x - self.displacement, y
-        else:
-            x, y = WIDTH, y - self.displacement
-        self.coord = (x, y)
-
-
-class Color:
-    def __init__(self, r=0, g=0, b=0, rgb=()):
-        self.r = r
-        self.g = g
-        self.b = b
-        if rgb:
-            if len(rgb) >= 3:
-                self.r, self.g, self.b = rgb[0:3] 
-            else:
-                raise Exception('RGB should have at least 3 values to unpack')
-        self.color = [self.r, self.g, self.b]
-
-    def randomize(self):
-        for i in range(len(self.color)):
-            primary_color = self.color[i]
-            try:
-                if primary_color >= 50:
-                    primary_color = primary_color % randint(1, 255) 
-                else: 
-                    primary_color = randint((primary_color + 10) * 2, 255) - primary_color
-            except ZeroDivisionError:
-                primary_color = randint((primary_color + 10), 255) - primary_color
-            self.color[i] = primary_color
-        # print(self.color)
 
 class App:
     def __init__(self):
-        pygame.display.set_caption("PixelEater")
+        pygame.display.set_caption("Visualizer")
         self.window = pygame.display.set_mode(size=(WIDTH, HEIGHT))
         self.running = True
         self.top_pixels, self.bot_pixels = [], []
 
         # Top pixel
         self.top_color = Color(rgb=WHITE)
-        self.top_pixel = Pixel(0, RADIUS, RADIUS, self.top_color, facing='RIGHT')
+        self.top_pixel = Pixel(0, RADIUS, RADIUS, self.top_color, facing='RIGHT', win=self.window)
         # Bottom pixel
         self.bot_color = Color(rgb=BLUE)
-        self.bot_pixel = Pixel(WIDTH, HEIGHT - RADIUS, RADIUS, self.bot_color, facing='LEFT')
+        self.bot_pixel = Pixel(WIDTH, HEIGHT - RADIUS, RADIUS, self.bot_color, facing='LEFT', win=self.window)
+
+        self.sound = Sound()
 
     def run(self):
+        self.scenario2()
+
+    def scenario1(self):
+        self.sound.open_stream()
         while self.running:
-            pygame.time.delay(DELAY)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+            sound_bit = self.sound.update_stream()[0]
+            if sound_bit.any():
+                rad_mod, dis_mod = 100 * (sound_bit[-1])
+            else:
+                rad_mod, dis_mod = (1, 1)
+            self.top_pixel.mod_radius(rad_mod)
+            self.bot_pixel.mod_radius(rad_mod)
             self.run_pixel(self.top_pixel)
             self.run_pixel(self.bot_pixel)
-            # print("{top}\t{bot}".format(top=(self.top_pixel.coord), \
-            #     bot=(self.bot_pixel.coord)))
+            self.top_pixel.mod_displacement(dis_mod)
+            self.bot_pixel.mod_displacement(dis_mod)
+            
             pygame.display.update()
+            pygame.time.delay(DELAY)
+
+    def scenario2(self):
+        self.sound.open_stream()
+        rad_mod, dis_mod = (1, 1)
+        center = (WIDTH // 2, HEIGHT // 2)
+        top_coord, bot_coord = center, center
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            sound_bit = self.sound.update_stream()[0]
+            if sound_bit.any():
+                rad_mod, dis_mod = 1000 * (sound_bit[0])
+                top_coord = (center[0] + int(rad_mod), center[1] + int(dis_mod))
+                bot_coord = (center[0] - int(rad_mod), center[1] + int(dis_mod))
+
+            self.top_pixel.coord = top_coord
+            self.top_pixel.mod_radius(rad_mod/10)
+
+            self.bot_pixel.coord = bot_coord
+            self.bot_pixel.mod_radius(rad_mod/10)
+
+            if abs(rad_mod) > (HEIGHT//4):
+                self.bot_pixel.color.randomize()
+                self.top_pixel.color.randomize()
+
+            self.bot_pixel.draw()
+            self.top_pixel.draw()
+            
+            pygame.display.update()
+            pygame.time.delay(DELAY)
 
     def run_pixel(self, pixel):
-        x, y = pixel.coord
         hit, direction = self.check_hit_change_direction(pixel, WIDTH, HEIGHT - (RADIUS/2))
         if hit:
             pixel.facing = direction
@@ -102,7 +89,7 @@ class App:
             else:
                 pixel.move_forwards()
 
-        pixel.draw(self.window)
+        pixel.draw()
         return pixel.color, direction
 
     def check_hit_change_direction(self, pixel, hit_x, hit_y):
