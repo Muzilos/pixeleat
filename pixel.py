@@ -61,3 +61,6 @@ class Color:
             self.color[i] = primary_color
         # print(self.color)
 
+    def darken(self):
+        for i in range(len(self.color)):
+            self.color[i] = self.color[i] // 2
