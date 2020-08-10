@@ -17,9 +17,6 @@ class Sound:
     def update_stream(self):
         available = self.stream.read_available
         self.sound_array = self.stream.read(available)
-        # if self.sound_array[0].any():
-        #     print(self.sound_array[:10])
-        #     print()
         return self.sound_array
 
     def open_stream(self):
@@ -39,7 +36,6 @@ class Sound:
             delay = 1 / delay_ms
             next_item = self.sound_array[self.sound_index]
             self.sound_index += int(delay)
-            print(next_item)
             return next_item, True
         else:
             return array([]), False

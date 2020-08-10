@@ -58,17 +58,19 @@ class App:
                     self.running = False
             sound_bit = self.sound.update_stream()[0]
             if sound_bit.any():
-                rad_mod, dis_mod = 1000 * (sound_bit[0])
+                sound_block = sum(sound_bit)
+                rad_mod, dis_mod = 10 * (sound_block)
                 top_coord = (center[0] + int(rad_mod), center[1] + int(dis_mod))
                 bot_coord = (center[0] - int(rad_mod), center[1] + int(dis_mod))
 
-            self.top_pixel.coord = top_coord
-            self.top_pixel.mod_radius(rad_mod/10)
+            if abs(rad_mod) >= RADIUS:
+                self.top_pixel.coord = top_coord
+                self.top_pixel.mod_radius(rad_mod/10)
 
-            self.bot_pixel.coord = bot_coord
-            self.bot_pixel.mod_radius(rad_mod/10)
+                self.bot_pixel.coord = bot_coord
+                self.bot_pixel.mod_radius(rad_mod/10)
 
-            if abs(rad_mod) > (HEIGHT//4):
+            if abs(rad_mod) > (HEIGHT//5):
                 self.bot_pixel.color.randomize()
                 self.top_pixel.color.randomize()
 
@@ -76,7 +78,7 @@ class App:
             self.top_pixel.draw()
             
             pygame.display.update()
-            pygame.time.delay(DELAY)
+            pygame.time.delay(DELAY*4)
 
     def run_pixel(self, pixel):
         hit, direction = self.check_hit_change_direction(pixel, WIDTH, HEIGHT - (RADIUS/2))

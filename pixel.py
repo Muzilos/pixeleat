@@ -8,7 +8,7 @@ class Pixel:
         self.radius = radius
         self.color = color
         self.facing = facing
-        self.displacement = RADIUS
+        self.displacement = 1
         self.win = win
 
     def draw(self):
