@@ -11,7 +11,7 @@ class App:
     def __init__(self):
         pygame.display.set_caption("Visualizer")
         self.window = pygame.display.set_mode(size=(WIDTH, HEIGHT))
-        self.window.fill([200, 50, 50])
+        self.window.fill([0, 0, 0])
         self.running = True
         self.top_pixels, self.bot_pixels = [], []
 
@@ -102,7 +102,8 @@ class App:
                 if abs(top_mod) >= (RADIUS*21):
                     self.bot_pixel.color.color = list(sound_block)
                     self.bot_pixel.color.darken()
-                    self.top_pixel.color.color = [0,] + sound_block[-2:]
+                    self.top_pixel.color.color = sound_block[-2:] + [255-sound_block[0],]
+                    # [randint(int(sound_block[0]), 255),]
 
             if abs(bot_mod) >= (RADIUS//2):
                 self.top_pixel.coord = top_coord
